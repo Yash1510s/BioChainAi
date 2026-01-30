@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioChain-AI | Sovereign Medical Identity</title>
+    <!-- Fonts: Inter & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ethers.js -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-container"></div>
+
+    <!-- 1. LANDING / LOGIN SCREEN -->
+    <section id="screen-login" class="full-screen active">
+        <div class="login-card glass-panel">
+            <h1 class="logo-text">🧬 BioChain AI</h1>
+            <p>The Future of Decentralized Healthcare.</p>
+            <button class="btn-primary btn-glow" onclick="connectWallet()">
+                <i class="fas fa-wallet"></i> Connect Wallet
+            </button>
+        </div>
+    </section>
+
+    <!-- 2. ROLE SELECTION SCREEN -->
+    <section id="screen-role-select" class="full-screen hidden">
+        <h2 class="section-title">Select Your Identity</h2>
+        <div class="role-grid">
+            <div class="role-card glass-panel" onclick="showRegistration('patient')">
+                <i class="fas fa-user-injured icon-large"></i>
+                <h3>Patient</h3>
+                <p>Manage your own records securely.</p>
+            </div>
+            <div class="role-card glass-panel" onclick="showRegistration('doctor')">
+                <i class="fas fa-user-md icon-large"></i>
+                <h3>Doctor</h3>
+                <p>Manage patients and treatments.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. MAIN DASHBOARD CONTAINER -->
+    <div id="app-dashboard" class="dashboard-container hidden">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <h2 class="logo-text-small">🧬 BioChain</h2>
+            </div>
+
+            <div class="user-profile-widget">
+                <img id="sidebar-user-img" src="https://via.placeholder.com/50" alt="Profile">
+                <div>
+                    <h4 id="sidebar-user-name">User</h4>
+                    <span id="sidebar-user-role" class="role-badge">Patient</span>
+                </div>
+            </div>
+
+            <nav class="nav-links">
+                <a href="#" id="nav-link-home" class="nav-item active" onclick="navTo('view-home')"><i
+                        class="fas fa-home"></i> Home</a>
+                <a href="#" id="nav-link-record" class="nav-item" onclick="navTo('view-record')"><i
+                        class="fas fa-file-medical"></i> My Record</a>
+                <a href="#" id="nav-link-upload" class="nav-item" onclick="navTo('view-upload')"><i
+                        class="fas fa-cloud-upload-alt"></i> Upload Data</a>
+                <a href="#" id="nav-link-team" class="nav-item" onclick="navTo('view-team')"><i
+                        class="fas fa-user-friends"></i> Care Team</a>
+                <a href="#" id="nav-patients" class="nav-item hidden" onclick="navTo('view-patients')"><i
+                        class="fas fa-procedures"></i> My Patients</a>
+                <a href="#" id="nav-link-inbox" class="nav-item" onclick="navTo('view-inbox')"><i
+                        class="fas fa-inbox"></i> Inbox <span id="nav-badge" class="badge hidden">0</span></a>
+                <a href="#" id="nav-link-settings" class="nav-item" onclick="navTo('view-settings')"><i
+                        class="fas fa-cog"></i> Settings</a>
+            </nav>
+
+            <div class="sidebar-footer" style="padding: 0 20px;">
+                <button class="btn-vibe" onclick="toggleHappyVibe()">
+                    <i class="fas fa-palette"></i> Happy Vibe
+                </button>
+                <button class="btn-vibe btn-disconnect" onclick="window.location.reload()">
+                    <i class="fas fa-sign-out-alt"></i> Disconnect
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="content-area">
+
+            <!-- Header -->
+            <header class="top-header">
+                <h2 id="header-title">Dashboard</h2>
+                <div class="header-actions">
+                    <span id="wallet-display">0x...</span>
+                    <button class="icon-btn"><i class="fas fa-bell"></i></button>
+                </div>
+            </header>
+
+            <!-- VIEW: HOME (Dashboard) -->
+            <div id="view-home" class="page-view active">
+                <div class="stats-grid">
+                    <div class="stat-card glass-panel">
+                        <i class="fas fa-heartbeat stat-icon color-red"></i>
+                        <div class="stat-info">
+                            <h4>Heart Rate</h4>
+                            <p class="stat-value">72 <small>bpm</small></p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <i class="fas fa-tint stat-icon color-blue"></i>
+                        <div class="stat-info">
+                            <h4>Blood Pressure</h4>
+                            <p class="stat-value">120/80</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <i class="fas fa-weight stat-icon color-cyan"></i>
+                        <div class="stat-info">
+                            <h4>Weight</h4>
+                            <p class="stat-value">70 <small>kg</small></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-row">
+                    <div class="row-card glass-panel large-card">
+                        <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                        <ul id="activity-feed" class="activity-list">
+                            <li>Loading activity...</li>
+                        </ul>
+                    </div>
+                    <div class="row-card glass-panel side-card">
+                        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                        <div class="quick-btns">
+                            <button class="btn-secondary full-width" onclick="navTo('view-upload')">Upload
+                                Report</button>
+                            <button class="btn-secondary full-width" onclick="navTo('view-team')">Manage Access</button>
+                            <button class="btn-danger full-width">🆘 Emergency SOS</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: UPLOAD DATA (New Feature) -->
+            <div id="view-upload" class="page-view hidden">
+                <div class="form-container glass-panel">
+                    <h3><i class="fas fa-upload"></i> Upload Medical Data</h3>
+                    <p class="text-muted">Securely store your records on IPFS & Ethereum.</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="up-date">
+                        </div>
+                        <div class="form-group">
+                            <label>Summary / Diagnosis</label>
+                            <input type="text" id="up-summary" placeholder="e.g. Annual Checkup">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Detailed Notes</label>
+                            <textarea id="up-notes" rows="4" placeholder="Doctor's observations..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Vitals (Optional)</label>
+                            <input type="text" id="up-vitals" placeholder="BP: 120/80, HR: 72">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Attachment (PDF/Image)</label>
+                            <div class="drop-zone" id="drop-zone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & Drop files here or click to browse</p>
+                                <input type="file" id="up-file" hidden>
+                            </div>
+                            <small id="file-name-display"></small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn-primary" onclick="initiateUpload()">Upload to Blockchain</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: RECORD -->
+            <div id="view-record" class="page-view hidden">
+                <div id="record-display-area" class="glass-panel">
+                    <!-- Populated by JS -->
+                    Loading Record...
+                </div>
+            </div>
+
+            <!-- VIEW: TEAM -->
+            <div id="view-team" class="page-view hidden">
+                <h3 class="section-heading">My Care Team</h3>
+
+                <!-- 1. DOCTORS SECTION -->
+                <div class="glass-panel padded-box">
+                    <div class="panel-header">
+                        <button class="btn-primary btn-small" onclick="openHireModal()">+ Hire Doctor</button>
+                    </div>
+
+                    <!-- Search Filter -->
+                    <div class="search-bar-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="search-care-team" placeholder="Search by Name or Address..."
+                            class="search-input" onkeyup="filterList('search-care-team', 'care-doctors-list')">
+                    </div>
+
+                    <div id="care-doctors-list" class="list-vertical">
+                        <p class="text-muted">Loading doctors...</p>
+                    </div>
+                </div>
+
+                <!-- 2. FAMILY SECTION -->
+                <div class="glass-panel padded-box mt-20">
+                    <div class="panel-header">
+                        <h4><i class="fas fa-users"></i> Family Access</h4>
+                        <button class="btn-secondary btn-small" onclick="toggleFamilyForm()">+ Add Member</button>
+                    </div>
+
+                    <!-- Add Family Form (Hidden by default) -->
+                    <div id="family-form" class="hidden form-inline">
+                        <input type="text" id="fam-addr" placeholder="Wallet Address (0x...)">
+                        <input type="text" id="fam-name" placeholder="Name">
+                        <input type="text" id="fam-rel" placeholder="Relation">
+                        <button class="btn-primary" onclick="addFamilyMember()">Add</button>
+                    </div>
+
+                    <div id="care-family-list" class="list-vertical mt-10">
+                        <p class="text-muted">Loading family...</p>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- VIEW: DOCTOR'S PATIENTS -->
+            <div id="view-patients" class="page-view hidden">
+                <h3>My Patients</h3>
+
+                <!-- New Patient Lookup -->
+                <div class="glass-panel" style="padding: 15px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom:10px;"><i class="fas fa-user-plus"></i> New Patient Lookup</h4>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="lookup-new-patient" placeholder="Enter Patient Wallet Address (0x...)"
+                            style="flex:1;">
+                        <button class="btn-secondary" onclick="lookupPatient()">Check</button>
+                    </div>
+                    <div id="lookup-result" class="mt-10 hidden"></div>
+                </div>
+
+                <!-- My Patients Filter -->
+                <div class="search-bar-container mb-10">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="search-patients" placeholder="Filter My Patients..." class="search-input"
+                        onkeyup="filterList('search-patients', 'patients-list')">
+                </div>
+
+                <div id="patients-list" class="list-container">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Patient Record Detail View -->
+                <div id="patient-detail-view" class="glass-panel mt-20 hidden">
+                    <div class="panel-header">
+                        <h4 id="pat-detail-name">Patient Name</h4>
+                        <button class="close-btn" onclick="closePatientDetail()">Close</button>
+                    </div>
+                    <div id="pat-detail-content" class="scroll-box">
+                        <!-- IPFS Data loads here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: INBOX -->
+            <div id="view-inbox" class="page-view hidden">
+                <h3>Inbox (Referrals)</h3>
+                <div id="inbox-list" class="list-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- VIEW: SETTINGS -->
+            <div id="view-settings" class="page-view hidden">
+                <h3>Settings</h3>
+                <div class="glass-panel padded-box" style="border: 0.5px solid rgba(239, 68, 68, 0.3);">
+                    <h4 class="color-red"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h4>
+                    <p class="text-muted mb-10">Once you delete your account, you lose access to all data permanently.
+                        This action cannot be undone.</p>
+                    <button class="btn-danger full-width" onclick="deleteAccount()">Delete My Account</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- DOCTOR INFO MODAL -->
+    <div id="modal-doc-info" class="modal-overlay hidden">
+        <div class="modal-card glass-panel">
+            <button class="close-btn" onclick="closeModalAll()">&times;</button>
+            <div class="text-center">
+                <div class="profile-icon-large"><i class="fas fa-user-md"></i></div>
+                <h3 id="info-doc-name" class="mt-10">Doctor Name</h3>
+                <span id="info-doc-hosp" class="role-badge">Hospital</span>
+            </div>
+            <div class="info-list mt-20">
+                <div class="glass-row">
+                    <small>Wallet Address</small>
+                    <div id="info-doc-addr" class="text-mono small-text">0x...</div>
+                </div>
+                <div class="glass-row">
+                    <small>Contact</small>
+                    <div id="info-doc-cont">N/A</div>
+                </div>
+            </div>
+            <button class="btn-secondary full-width mt-20" onclick="closeModalAll()">Close</button>
+        </div>
+    </div>
+
+    <!-- MEDICAL RECORD MODAL -->
+    <div id="modal-view-record" class="modal-overlay hidden">
+        <div class="modal-box large-modal"> <!-- Styled larger in CSS if needed -->
+            <button class="close-modal-top" onclick="closeModalAll()">×</button>
+            <div id="record-modal-content">
+                <!-- Injected via JS -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModalAll()">Close</button>
+                <button class="btn-primary" onclick="printReport()">Print / PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM UPLOAD MODAL -->
+    <div id="modal-confirm-upload" class="modal-overlay hidden">
+        <div class="modal-card glass-panel">
+            <button class="close-btn" onclick="closeModalAll()">&times;</button>
+            <h3>⚠️ Verify Upload</h3>
+            <p class="text-muted small-text">Please review your data before confirming. This action requires a gas fee.
+            </p>
+
+            <div class="info-box" style="margin: 15px 0; max-height: 200px; overflow-y: auto;">
+                <p><strong>Summary:</strong> <span id="confirm-summary"></span></p>
+                <p><strong>Notes:</strong> <span id="confirm-notes"></span></p>
+                <p><strong>File:</strong> <span id="confirm-file">None</span></p>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModalAll()">Cancel</button>
+                <button class="btn-primary" onclick="confirmUpload()">Sign & Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORY MODAL -->
+    <div id="modal-history" class="modal-overlay hidden">
+        <div class="modal-card glass-panel" style="max-width: 600px;">
+            <button class="close-btn" onclick="closeModalAll()">&times;</button>
+            <h3>📅 Blockchain History</h3>
+            <div id="full-history-list" class="list-vertical scroll-box" style="max-height: 400px; margin-top: 15px;">
+                <p>Loading full history...</p>
+            </div>
+            <button class="btn-secondary full-width mt-20" onclick="closeModalAll()">Close</button>
+        </div>
+    </div>
+
+    <!-- HIRE MODAL -->
+    <div id="modal-hire-doctor" class="modal-overlay hidden">
+        <div class="modal-card glass-panel">
+            <button class="close-btn" onclick="closeModalAll()">&times;</button>
+            <h3>🤝 Hire a Doctor</h3>
+            <p class="text-muted small-text">Enter the Doctor's Wallet Address.</p>
+
+            <input type="text" id="hire-addr" placeholder="Doctor Address (0x...)" oninput="checkDoctorProfile()">
+
+            <div id="hire-doc-preview" class="hidden glass-row mt-10">
+                <!-- JS Populates this -->
+            </div>
+
+            <button id="btn-confirm-hire" class="btn-primary full-width mt-20 hidden"
+                onclick="confirmManualHire()">Confirm & Grant Access</button>
+        </div>
+    </div>
+
+    <!-- REGISTRATION MODALS (Patient / Doctor) -->
+    <div id="modal-reg-patient" class="modal-overlay hidden">
+        <div class="modal-card glass-panel">
+            <button class="close-btn" onclick="closeModalAll()">&times;</button>
+            <h3>👤 Patient Registration</h3>
+            <input type="text" id="reg-p-name" placeholder="Full Name">
+            <input type="number" id="reg-p-age" placeholder="Age">
+            <input type="file" id="reg-p-photo">
+            <button class="btn-primary full-width" onclick="registerPatient()">Register</button>
+        </div>
+    </div>
+
+    <div id="modal-reg-doctor" class="modal-overlay hidden">
+        <div class="modal-card glass-panel">
+            <button class="close-btn" onclick="closeModalAll()">&times;</button>
+            <h3>🩺 Doctor Registration</h3>
+            <input type="text" id="reg-d-name" placeholder="Doctor Name">
+            <input type="text" id="reg-d-hosp" placeholder="Hospital">
+            <input type="text" id="reg-d-cont" placeholder="Contact">
+            <input type="file" id="reg-d-photo">
+            <button class="btn-primary full-width" onclick="registerDoctor()">Register</button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
